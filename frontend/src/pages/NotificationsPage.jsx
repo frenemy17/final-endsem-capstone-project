@@ -1,8 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { acceptFriendRequest, getFriendRequests } from "../lib/api";
-// --- ADDED NEW ICONS ---
 import { BellIcon, ClockIcon, GitBranch, MessageSquareIcon, School, UserCheckIcon } from "lucide-react";
 import NoNotificationsFound from "../components/NoNotificationsFound";
+import { Card, CardContent } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 
 const NotificationsPage = () => {
   const queryClient = useQueryClient();
@@ -39,56 +42,51 @@ const NotificationsPage = () => {
                 <h2 className="text-xl font-semibold flex items-center gap-2">
                   <UserCheckIcon className="h-5 w-5 text-primary" />
                   Friend Requests
-                  <span className="badge badge-primary ml-2">{incomingRequests.length}</span>
+                  <Badge className="ml-2">{incomingRequests.length}</Badge>
                 </h2>
 
                 <div className="space-y-3">
                   {incomingRequests.map((request) => (
-                    <div
-                      key={request._id}
-                      className="card bg-base-200 shadow-sm hover:shadow-md transition-shadow"
-                    >
-                      <div className="card-body p-4">
+                    <Card key={request._id} className="shadow-sm hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <div className="avatar">
-                              <div className="w-14 rounded-full">
-                                <img
-                                  src={request.sender.profilePic}
-                                  alt={request.sender.fullName}
-                                />
-                              </div>
-                            </div>
+                            <Avatar className="h-14 w-14">
+                              <AvatarImage
+                                src={request.sender.profilePic}
+                                alt={request.sender.fullName}
+                              />
+                              <AvatarFallback>{request.sender.fullName.charAt(0)}</AvatarFallback>
+                            </Avatar>
                             <div>
                               <h3 className="font-semibold">{request.sender.fullName}</h3>
-                              {/* --- UPDATED THIS SECTION --- */}
                               <div className="flex flex-wrap gap-1.5 mt-1">
                                 {request.sender.college && (
-                                  <span className="badge badge-secondary badge-sm">
+                                  <Badge variant="secondary" className="text-xs">
                                     <School className="size-3 mr-1" />
                                     {request.sender.college}
-                                  </span>
+                                  </Badge>
                                 )}
                                 {request.sender.branch && (
-                                  <span className="badge badge-outline badge-sm">
+                                  <Badge variant="outline" className="text-xs">
                                     <GitBranch className="size-3 mr-1" />
                                     {request.sender.branch}
-                                  </span>
+                                  </Badge>
                                 )}
                               </div>
                             </div>
                           </div>
 
-                          <button
-                            className="btn btn-primary btn-sm"
+                          <Button
+                            size="sm"
                             onClick={() => acceptRequestMutation(request._id)}
                             disabled={isPending}
                           >
                             Accept
-                          </button>
+                          </Button>
                         </div>
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               </section>
@@ -104,34 +102,33 @@ const NotificationsPage = () => {
 
                 <div className="space-y-3">
                   {acceptedRequests.map((notification) => (
-                    <div key={notification._id} className="card bg-base-200 shadow-sm">
-                      <div className="card-body p-4">
+                    <Card key={notification._id} className="shadow-sm">
+                      <CardContent className="p-4">
                         <div className="flex items-start gap-3">
-                          <div className="avatar mt-1">
-                            <div className="w-10 rounded-full">
-                              <img
-                                src={notification.recipient.profilePic}
-                                alt={notification.recipient.fullName}
-                              />
-                            </div>
-                          </div>
+                          <Avatar className="h-10 w-10 mt-1">
+                            <AvatarImage
+                              src={notification.recipient.profilePic}
+                              alt={notification.recipient.fullName}
+                            />
+                            <AvatarFallback>{notification.recipient.fullName.charAt(0)}</AvatarFallback>
+                          </Avatar>
                           <div className="flex-1">
                             <h3 className="font-semibold">{notification.recipient.fullName}</h3>
                             <p className="text-sm my-1">
                               {notification.recipient.fullName} accepted your friend request
                             </p>
-                            <p className="text-xs flex items-center opacity-70">
+                            <p className="text-xs flex items-center text-muted-foreground">
                               <ClockIcon className="h-3 w-3 mr-1" />
                               Recently
                             </p>
                           </div>
-                          <div className="badge badge-success">
+                          <Badge className="bg-green-500">
                             <MessageSquareIcon className="h-3 w-3 mr-1" />
                             New Friend
-                          </div>
+                          </Badge>
                         </div>
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               </section>

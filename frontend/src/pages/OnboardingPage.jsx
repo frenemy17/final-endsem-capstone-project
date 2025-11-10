@@ -1,13 +1,18 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import useAuthUser from "../hooks/useAuthUser";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { completeOnboarding } from "../lib/api";
-import { CameraIcon, LoaderIcon, MapPinIcon, ShipWheelIcon, ShuffleIcon } from "lucide-react";
+import { CameraIcon, LoaderIcon, MapPinIcon, ShipWheelIcon, ShuffleIcon, UploadIcon } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 
 const OnboardingPage = () => {
   const { authUser } = useAuthUser();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef(null);
 
   const [formState, setFormState] = useState({
     fullName: authUser?.fullName || "",
@@ -36,114 +41,139 @@ const OnboardingPage = () => {
   };
 
   const handleRandomAvatar = () => {
-    const idx = Math.floor(Math.random() * 100) + 1;
-    const randomAvatar = `https://avatar.iran.liara.run/public/${idx}.png`;
+    const colors = ['FF6B6B', '4ECDC4', '45B7D1', 'FFA07A', '98D8C8', 'F7DC6F', 'BB8FCE', '85C1E9'];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    const randomAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(formState.fullName)}&background=${randomColor}&color=fff&size=200&font-size=0.6`;
     setFormState({ ...formState, profilePic: randomAvatar });
     toast.success("Random profile picture generated!");
   };
 
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please select a valid image file");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size should be less than 5MB");
+      return;
+    }
+
+    // Create object URL for preview
+    const imageUrl = URL.createObjectURL(file);
+    setFormState({ ...formState, profilePic: imageUrl });
+    toast.success("Profile picture uploaded successfully!");
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
-    <div className='min-h-screen bg-base-100 flex items-center justify-center p-4'>
-      <div className='card bg-base-200 w-full max-w-3xl shadow-xl'>
-        <div className='card-body p-6 sm:p-8'>
-          <h1 className='text-2xl sm:text-3xl font-bold text-center mb-6'>Complete Your Profile</h1>
+    <div className='min-h-screen flex items-center justify-center p-4'>
+      <Card className='w-full max-w-3xl shadow-xl'>
+        <CardHeader>
+          <CardTitle className='text-2xl sm:text-3xl text-center'>Complete Your Profile</CardTitle>
+        </CardHeader>
+        <CardContent className='p-6 sm:p-8'>
 
           <form onSubmit={handleSubmit} className='space-y-6'>
             <div className='flex flex-col items-center justify-center space-y-4'>
-              <div className='size-32 rounded-full bg-base-300 overflow-hidden'>
-                {formState.profilePic ? (
-                  <img src={formState.profilePic} alt='Profile Preview' className='w-full h-full object-cover' />
-                ) : (
-                  <div className='flex items-center justify-center h-full'>
-                    <CameraIcon className='size-12 text-base-content opacity-40' />
-                  </div>
-                )}
-              </div>
+              <Avatar className='size-32'>
+                <AvatarImage src={formState.profilePic} alt='Profile Preview' />
+                <AvatarFallback>
+                  <CameraIcon className='size-12 text-muted-foreground' />
+                </AvatarFallback>
+              </Avatar>
 
-              <div className='flex items-center gap-2'>
-                <button type='button' onClick={handleRandomAvatar} className='btn btn-accent'>
+              <div className='flex items-center gap-2 flex-wrap justify-center'>
+                <Button type='button' onClick={handleUploadClick}>
+                  <UploadIcon className='size-4 mr-2' />
+                  Upload from Device
+                </Button>
+                <Button type='button' onClick={handleRandomAvatar} variant='secondary'>
                   <ShuffleIcon className='size-4 mr-2' />
                   Generate Random Avatar
-                </button>
+                </Button>
               </div>
+
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type='file'
+                accept='image/*'
+                onChange={handleFileUpload}
+                className='hidden'
+              />
             </div>
 
-            <div className='form-control'>
-              <label className='label'>
-                <span className='label-text'>Full Name</span>
-              </label>
-              <input
+            <div className='space-y-2'>
+              <label className='text-sm font-medium'>Full Name</label>
+              <Input
                 type='text'
                 name='fullName'
                 value={formState.fullName}
                 onChange={(e) => setFormState({ ...formState, fullName: e.target.value })}
-                className='input input-bordered w-full'
                 placeholder='Your full name'
               />
             </div>
 
-            <div className='form-control'>
-              <label className='label'>
-                <span className='label-text'>Bio</span>
-              </label>
+            <div className='space-y-2'>
+              <label className='text-sm font-medium'>Bio</label>
               <textarea
                 name='bio'
                 value={formState.bio}
                 onChange={(e) => setFormState({ ...formState, bio: e.target.value })}
-                className='textarea textarea-bordered h-24'
+                className='flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
                 placeholder='Tell others about yourself'
               />
             </div>
 
-            {/* COLLEGE & BRANCH INPUTS */}
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-              <div className='form-control'>
-                <label className='label'>
-                  <span className='label-text'>College</span>
-                </label>
-                <input
+              <div className='space-y-2'>
+                <label className='text-sm font-medium'>College</label>
+                <Input
                   type='text'
                   name='college'
                   value={formState.college}
                   onChange={(e) => setFormState({ ...formState, college: e.target.value })}
-                  className='input input-bordered w-full'
                   placeholder='e.g., IIT Bombay'
                 />
               </div>
 
-              <div className='form-control'>
-                <label className='label'>
-                  <span className='label-text'>Branch</span>
-                </label>
-                <input
+              <div className='space-y-2'>
+                <label className='text-sm font-medium'>Branch</label>
+                <Input
                   type='text'
                   name='branch'
                   value={formState.branch}
                   onChange={(e) => setFormState({ ...formState, branch: e.target.value })}
-                  className='input input-bordered w-full'
                   placeholder='e.g., Computer Science'
                 />
               </div>
             </div>
 
-            <div className='form-control'>
-              <label className='label'>
-                <span className='label-text'>Location</span>
-              </label>
+            <div className='space-y-2'>
+              <label className='text-sm font-medium'>Location</label>
               <div className='relative'>
-                <MapPinIcon className='absolute top-1/2 transform -translate-y-1/2 left-3 size-5 text-base-content opacity-70' />
-                <input
+                <MapPinIcon className='absolute top-1/2 transform -translate-y-1/2 left-3 size-5 text-muted-foreground' />
+                <Input
                   type='text'
                   name='location'
                   value={formState.location}
                   onChange={(e) => setFormState({ ...formState, location: e.target.value })}
-                  className='input input-bordered w-full pl-10'
+                  className='pl-10'
                   placeholder='City, Country'
                 />
               </div>
             </div>
 
-            <button className='btn btn-primary w-full' disabled={isPending} type='submit'>
+            <Button className='w-full' disabled={isPending} type='submit'>
               {!isPending ? (
                 <>
                   <ShipWheelIcon className='size-5 mr-2' />
@@ -155,10 +185,10 @@ const OnboardingPage = () => {
                   Onboarding...
                 </>
               )}
-            </button>
+            </Button>
           </form>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

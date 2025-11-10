@@ -3,6 +3,7 @@ import { useParams } from "react-router";
 import useAuthUser from "../hooks/useAuthUser";
 import { useQuery } from "@tanstack/react-query";
 import { getStreamToken } from "../lib/api";
+import { useTheme } from "../components/theme-provider";
 
 import {
   Channel,
@@ -94,19 +95,24 @@ const ChatPage = () => {
 
   if (loading || !chatClient || !channel) return <ChatLoader />;
 
+  const { theme } = useTheme();
+  const chatTheme = theme === "dark" ? "str-chat__theme-dark" : "str-chat__theme-light";
+
   return (
-    <div className="h-[93vh]">
-      <Chat client={chatClient}>
+    <div className="h-[calc(100vh-4rem)] bg-background">
+      <Chat client={chatClient} theme={chatTheme}>
         <Channel channel={channel}>
-          <div className="w-full relative">
-            <CallButton handleVideoCall={handleVideoCall} />
-            <Window>
-              <ChannelHeader />
-              <MessageList />
-              <MessageInput focus />
-            </Window>
+          <div className="w-full h-full relative flex">
+            <div className="flex-1 flex flex-col">
+              <CallButton handleVideoCall={handleVideoCall} />
+              <Window>
+                <ChannelHeader />
+                <MessageList />
+                <MessageInput focus />
+              </Window>
+            </div>
+            <Thread />
           </div>
-          <Thread />
         </Channel>
       </Chat>
     </div>

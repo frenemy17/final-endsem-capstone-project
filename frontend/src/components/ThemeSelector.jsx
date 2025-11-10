@@ -1,53 +1,41 @@
-import { PaletteIcon } from "lucide-react";
-import { useThemeStore } from "../store/useThemeStore";
-import { THEMES } from "../constants";
+import { useTheme } from "./theme-provider";
+import { MoonIcon, SunIcon, MonitorIcon } from "lucide-react";
+import { Button } from "./ui/button";
 
 const ThemeSelector = () => {
-  const { theme, setTheme } = useThemeStore();
+  const { theme, setTheme } = useTheme();
+
+  const cycleTheme = () => {
+    if (theme === "light") {
+      setTheme("dark");
+    } else if (theme === "dark") {
+      setTheme("system");
+    } else {
+      setTheme("light");
+    }
+  };
+
+  const getIcon = () => {
+    switch (theme) {
+      case "light":
+        return <SunIcon className="h-5 w-5" />;
+      case "dark":
+        return <MoonIcon className="h-5 w-5" />;
+      default:
+        return <MonitorIcon className="h-5 w-5" />;
+    }
+  };
 
   return (
-    <div className="dropdown dropdown-end">
-      {/* DROPDOWN TRIGGER */}
-      <button tabIndex={0} className="btn btn-ghost btn-circle">
-        <PaletteIcon className="size-5" />
-      </button>
-
-      <div
-        tabIndex={0}
-        className="dropdown-content mt-2 p-1 shadow-2xl bg-base-200 backdrop-blur-lg rounded-2xl
-        w-56 border border-base-content/10 max-h-80 overflow-y-auto"
-      >
-        <div className="space-y-1">
-          {THEMES.map((themeOption) => (
-            <button
-              key={themeOption.name}
-              className={`
-              w-full px-4 py-3 rounded-xl flex items-center gap-3 transition-colors
-              ${
-                theme === themeOption.name
-                  ? "bg-primary/10 text-primary"
-                  : "hover:bg-base-content/5"
-              }
-            `}
-              onClick={() => setTheme(themeOption.name)}
-            >
-              <PaletteIcon className="size-4" />
-              <span className="text-sm font-medium">{themeOption.label}</span>
-              {/* THEME PREVIEW COLORS */}
-              <div className="ml-auto flex gap-1">
-                {themeOption.colors.map((color, i) => (
-                  <span
-                    key={i}
-                    className="size-2 rounded-full"
-                    style={{ backgroundColor: color }}
-                  />
-                ))}
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={cycleTheme}
+      className="transition-all duration-200 hover:scale-105"
+    >
+      {getIcon()}
+    </Button>
   );
 };
+
 export default ThemeSelector;

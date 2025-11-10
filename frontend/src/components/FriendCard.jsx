@@ -1,43 +1,45 @@
-import { Link } from "react-router-dom"; // Note: Changed to react-router-dom for standard practice
-import { School, GitBranch } from "lucide-react"; // Importing icons for a nice UI
+import { Link } from "react-router-dom";
+import { School, GitBranch, MessageCircle } from "lucide-react";
+import { Card, CardContent } from "./ui/card";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 
 const FriendCard = ({ friend }) => {
   return (
-    <div className="card bg-base-200 hover:shadow-md transition-shadow">
-      <div className="card-body p-4">
-        {/* USER INFO */}
+    <Card className="hover:shadow-lg hover:scale-[1.02] transition-all duration-300 border-0 shadow-sm bg-gradient-to-br from-card to-card/90">
+      <CardContent className="p-5">
         <div className="flex items-center gap-3 mb-3">
-          <div className="avatar">
-            <div className="w-12 rounded-full">
-              <img src={friend.profilePic} alt={friend.fullName} />
-            </div>
-          </div>
+          <Avatar className="h-12 w-12">
+            <AvatarImage src={friend.profilePic} alt={friend.fullName} />
+            <AvatarFallback>{friend.fullName.charAt(0)}</AvatarFallback>
+          </Avatar>
           <h3 className="font-semibold truncate">{friend.fullName}</h3>
         </div>
 
-        {/* COLLEGE & BRANCH INFO - UPDATED SECTION */}
         <div className="flex flex-wrap gap-1.5 mb-3">
           {friend.college && (
-            <span className="badge badge-secondary text-xs">
+            <Badge variant="secondary" className="text-xs">
               <School className="size-3 mr-1" />
               {friend.college}
-            </span>
+            </Badge>
           )}
           {friend.branch && (
-            <span className="badge badge-outline text-xs">
+            <Badge variant="outline" className="text-xs">
               <GitBranch className="size-3 mr-1" />
               {friend.branch}
-            </span>
+            </Badge>
           )}
         </div>
 
-        <Link to={`/chat/${friend._id}`} className="btn btn-primary btn-sm w-full">
-          Message
-        </Link>
-      </div>
-    </div>
+        <Button asChild size="sm" className="w-full">
+          <Link to={`/chat/${friend._id}`}>
+            <MessageCircle className="size-4 mr-2" />
+            Message
+          </Link>
+        </Button>
+      </CardContent>
+    </Card>
   );
 };
 export default FriendCard;
-
-// The getLanguageFlag function is no longer needed and has been removed.

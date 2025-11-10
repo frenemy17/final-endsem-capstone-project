@@ -5,14 +5,41 @@ export async function getRecommendedUsers(req, res) {
   try {
     const currentUserId = req.user.id;
     const currentUser = req.user;
+    const { search, college, branch, location } = req.query;
 
-    const recommendedUsers = await User.find({
+    let query = {
       $and: [
         { _id: { $ne: currentUserId } },
         { _id: { $nin: currentUser.friends } },
         { isOnboarded: true },
       ],
-    });
+    };
+
+    // Add search functionality
+    if (search) {
+      query.$and.push({
+        $or: [
+          { fullName: { $regex: search, $options: "i" } },
+          { bio: { $regex: search, $options: "i" } },
+          { college: { $regex: search, $options: "i" } },
+          { branch: { $regex: search, $options: "i" } },
+          { location: { $regex: search, $options: "i" } },
+        ],
+      });
+    }
+
+    // Add filters
+    if (college) {
+      query.$and.push({ college: { $regex: college, $options: "i" } });
+    }
+    if (branch) {
+      query.$and.push({ branch: { $regex: branch, $options: "i" } });
+    }
+    if (location) {
+      query.$and.push({ location: { $regex: location, $options: "i" } });
+    }
+
+    const recommendedUsers = await User.find(query);
     res.status(200).json(recommendedUsers);
   } catch (error) {
     console.error("Error in getRecommendedUsers controller", error.message);
@@ -109,6 +136,29 @@ export async function acceptFriendRequest(req, res) {
   }
 }
 
+export async function declineFriendRequest(req, res) {
+  try {
+    const { id: requestId } = req.params;
+
+    const friendRequest = await FriendRequest.findById(requestId);
+
+    if (!friendRequest) {
+      return res.status(404).json({ message: "Friend request not found" });
+    }
+
+    if (friendRequest.recipient.toString() !== req.user.id) {
+      return res.status(403).json({ message: "You are not authorized to decline this request" });
+    }
+
+    await FriendRequest.findByIdAndDelete(requestId);
+
+    res.status(200).json({ message: "Friend request declined" });
+  } catch (error) {
+    console.log("Error in declineFriendRequest controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
 export async function getFriendRequests(req, res) {
   try {
     const incomingReqs = await FriendRequest.find({
@@ -140,6 +190,28 @@ export async function getOutgoingFriendReqs(req, res) {
     res.status(200).json(outgoingRequests);
   } catch (error) {
     console.log("Error in getOutgoingFriendReqs controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+export async function updateProfile(req, res) {
+  try {
+    const userId = req.user.id;
+    const { fullName, bio, college, branch, location, profilePic } = req.body;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { fullName, bio, college, branch, location, profilePic },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ success: true, user: updatedUser });
+  } catch (error) {
+    console.log("Error in updateProfile controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
